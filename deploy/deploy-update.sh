@@ -7,7 +7,7 @@ FULL_IMAGE="${HARBOR_REGISTRY}/${IMAGE_NAME}:${TAG}"
 
 SECRETS_JSON="["
 first=true
-while IFS='=' read -r key value; do
+while IFS='=' read -r key value || [ -n "$key" ]; do
   case "$key" in "#"*|"") continue ;; esac
   $first || SECRETS_JSON="${SECRETS_JSON},"
   SECRETS_JSON="${SECRETS_JSON}{\"name\": \"$key\", \"value\": \"$value\"}"
