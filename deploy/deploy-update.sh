@@ -1,24 +1,19 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-
-source "$SCRIPT_DIR/deploy.env"
+. deploy/deploy.env
 
 FULL_IMAGE="${HARBOR_REGISTRY}/${IMAGE_NAME}:${TAG}"
 
 SECRETS_JSON="["
 first=true
 while IFS='=' read -r key value; do
-  [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
-  $first || SECRETS_JSON+=","
-  SECRETS_JSON+="{\"name\": \"$key\", \"value\": \"$value\"}"
+  case "$key" in "#"*|"") continue ;; esac
+  $first || SECRETS_JSON="${SECRETS_JSON},"
+  SECRETS_JSON="${SECRETS_JSON}{\"name\": \"$key\", \"value\": \"$value\"}"
   first=false
-done < "$SCRIPT_DIR/agent.env"
-SECRETS_JSON+="]"
-
-cd "$PROJECT_ROOT"
+done < deploy/agent.env
+SECRETS_JSON="${SECRETS_JSON}]"
 
 echo "▶ [1/3] Build: ${FULL_IMAGE}"
 langgraph build -t "${FULL_IMAGE}" --no-cache
